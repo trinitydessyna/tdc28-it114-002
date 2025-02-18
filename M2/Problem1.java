@@ -18,9 +18,9 @@ public class Problem1 extends BaseClass {
         
         boolean first = true;
         for(int num : arr){
-            if (num%2 !=0){
+            if (num%2 !=0){ //this checks if the number is odd
                 if(!first){
-                    System.out.print(",");
+                    System.out.print(","); //for comma separation
                 }
                 System.out.print(num);
                 first = false;
