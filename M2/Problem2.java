@@ -22,12 +22,13 @@ public class Problem2 extends BaseClass {
         // Start Solution Edits
         // Solve Challenge 1 here
 
-        //getting the sum of all the values passed in array:
+        //step 1: getting the sum of all the values passed in array:
         for (double num : arr){
             total += num; //gets the sum
         }
       
         // Solve Challenge 2 here
+        // step 2: makes sure that the sum doesnt have more than 2 decimals
         Object modifiedTotal = String.format("%.2f", total);
 
         // End Solution Edits
