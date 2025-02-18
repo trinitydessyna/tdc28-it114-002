@@ -21,10 +21,15 @@ public class Problem2 extends BaseClass {
         double total = 0;
         // Start Solution Edits
         // Solve Challenge 1 here
-        
+
+        //step 1: getting the sum of all the values passed in array:
+        for (double num : arr){
+            total += num; //gets the sum
+        }
       
         // Solve Challenge 2 here
-        Object modifiedTotal = "?";
+        // step 2: makes sure that the sum doesnt have more than 2 decimals
+        Object modifiedTotal = String.format("%.2f", total);
 
         // End Solution Edits
         System.out.println("Total Raw Value: " +total);
@@ -34,7 +39,7 @@ public class Problem2 extends BaseClass {
     }
 
     public static void main(String[] args) {
-        final String ucid = "mt85"; // <-- change to your UCID
+        final String ucid = "tdc28"; // <-- change to your UCID
         // no edits below this line
         printHeader(ucid, 2);
         sumValues(array1, 1);

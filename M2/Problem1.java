@@ -16,13 +16,24 @@ public class Problem1 extends BaseClass {
         System.out.print("Output Array: ");
         // Start Solution Edits
         
+        boolean first = true;
+        for(int num : arr){
+            if (num%2 !=0){ //this checks if the number is odd
+                if(!first){
+                    System.out.print(","); //for comma separation
+                }
+                System.out.print(num);
+                first = false;
+            }
+           
+        }
 
         // End Solution Edits
         System.out.println("");
         System.out.println("______________________________________");
     }
     public static void main(String[] args) {
-        final String ucid = "mt85"; // <-- change to your UCID
+        final String ucid = "tdc28"; // <-- change to your UCID
         // no edits below this line
         printHeader(ucid, 1);
         printOdds(array1,1);

@@ -18,6 +18,25 @@ public class Problem3 extends BaseClass {
         Object[] output = new Object[arr.length];
         // Start Solution Edits
         
+        //step 1 converting integer, double, and float to positive
+        for (int i=0;i<arr.length; i++){
+            Object current =arr[i];
+
+            if (current instanceof Integer){
+                output[i]=Math.abs((Integer) current);
+            } else if (current instanceof Double){
+                output[i]=Math.abs((Double) current);
+            } else if (current instanceof Float){
+                output[i]=Math.abs((Float) current);
+            } else if (current instanceof String){
+                try{ //step 2 trying to convert string to positive
+                    double value = Double.parseDouble((String) current);
+                    output[i]=String.valueOf(Math.abs(value));
+                } catch(NumberFormatException e){
+                    output[i]=current;
+                } 
+            }
+        }
 
         // End Solution Edits
         System.out.println("Output: ");
@@ -27,7 +46,7 @@ public class Problem3 extends BaseClass {
     }
 
     public static void main(String[] args) {
-        final String ucid = "mt85"; // <-- change to your UCID
+        final String ucid = "tdc28"; // <-- change to your UCID
         // no edits below this line
         printHeader(ucid, 3);
         bePositive(array1, 1);
