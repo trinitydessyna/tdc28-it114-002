@@ -30,7 +30,36 @@ public class Problem4 extends BaseClass {
         
         for(int i = 0; i <arr.length; i++){
             // Start Solution Edits
-            
+
+            //step 1: removing non-alphanumeric characters except spaces
+            String current = arr[i];
+            current = current.replaceAll("[^a-zA-Z0-9 ]", " ");
+
+            //step 2: converting text
+            String[] words = current.toLowerCase().trim().split("\\s+");
+            StringBuilder titleCase = new StringBuilder();
+            for(String word : words){
+                if(!word.isEmpty()){
+                    titleCase.append(Character.toUpperCase(word.charAt(0)))
+                        .append(word.substring(1))
+                        .append(" ");
+                }
+            }
+            current = titleCase.toString().trim();
+
+            //EXTRA CREDIT
+
+            //extracting 3 characters, if the phrase has enough
+
+            int length = current.length();
+            if (length>=3){
+                int middleIndex = length/2-1;
+                placeholderForMiddleCharacters = current.substring(middleIndex, middleIndex+3);
+            } else {
+                placeholderForMiddleCharacters = "Not enough characters";
+            }
+
+               
              // End Solution Edits
             System.out.println(String.format("Index[%d] \"%s\" | Middle: \"%s\"",i, placeholderForModifiedPhrase, placeholderForMiddleCharacters));
         }
@@ -42,7 +71,7 @@ public class Problem4 extends BaseClass {
     }
 
     public static void main(String[] args) {
-        final String ucid = "mt85"; // <-- change to your UCID
+        final String ucid = "tdc28"; // <-- change to your UCID
         // No edits below this line
         printHeader(ucid, 4);
 
