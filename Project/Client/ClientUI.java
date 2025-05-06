@@ -49,14 +49,7 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
     private JLabel roomLabel = new JLabel();
 
     {
-        // Note: Moved from Client as this file is the entry point now
-        // statically initialize the client-side LoggerUtil
-        LoggerUtil.LoggerConfig config = new LoggerUtil.LoggerConfig();
-        config.setFileSizeLimit(2048 * 1024); // 2MB
-        config.setFileCount(1);
-        config.setLogLocation("client-ui.log");
-        // Set the logger configuration
-        LoggerUtil.INSTANCE.setConfig(config);
+        //you took it from here trinity
     }
 
     /**

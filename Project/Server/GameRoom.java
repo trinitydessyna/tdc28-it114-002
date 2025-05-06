@@ -113,23 +113,46 @@ public class GameRoom extends BaseGameRoom {
 
     /** {@inheritDoc} */
     @Override
-    protected void onRoundStart() {
-        LoggerUtil.INSTANCE.info("onRoundStart() start");
-        round++;
-        // relay(null, String.format("Round %d has started", round));
-        sendGameEvent("Round: " + round);
+protected void onRoundStart() {
+    LoggerUtil.INSTANCE.info("onRoundStart() start");
+    round++;
+    sendGameEvent("Round: " + round);
 
-        clientsInRoom.values().forEach(sp -> {
-            sp.setChoice(null);
-        });
-        changePhase(Phase.CHOOSING);
-        resetRoundTimer();
-        resetTurnStatus();
-        LoggerUtil.INSTANCE.info("onRoundStart() end");
-        onTurnStart();
-        startRoundTimer();
+    // Reset player choices
+    clientsInRoom.values().forEach(sp -> {
+        LoggerUtil.INSTANCE.info("Resetting choice for player: " + sp.getPlayerId());
+        sp.setChoice(null);
+    });
 
+    // Change phase to CHOOSING
+    changePhase(Phase.CHOOSING);
+    LoggerUtil.INSTANCE.info("Phase changed to: " + Phase.CHOOSING);
+
+    // Optional delay for phase transition (if needed)
+    try {
+        Thread.sleep(1000); // Adjust time as needed
+    } catch (InterruptedException e) {
+        e.printStackTrace();
     }
+
+    // Reset round timer
+    resetRoundTimer();
+    LoggerUtil.INSTANCE.info("Round timer reset for round " + round);
+
+    // Reset turn status and start the turn
+    resetTurnStatus();
+    LoggerUtil.INSTANCE.info("Turn status reset for round " + round);
+
+    onTurnStart();
+    LoggerUtil.INSTANCE.info("Turn started for round " + round);
+
+    // Start the round timer
+    startRoundTimer();
+    LoggerUtil.INSTANCE.info("Round timer started for round " + round);
+
+    LoggerUtil.INSTANCE.info("onRoundStart() end");
+}
+
 
     /** {@inheritDoc} */
     @Override
@@ -176,7 +199,6 @@ public class GameRoom extends BaseGameRoom {
             e.printStackTrace();
         }
         LoggerUtil.INSTANCE.info("onTurnEnd() end");
-        ProcessBattles();
     }
 
     // Note: logic between Round Start and Round End is typically handled via timers
@@ -189,6 +211,7 @@ public class GameRoom extends BaseGameRoom {
         ProcessBattles();
         LoggerUtil.INSTANCE.info("onRoundEnd() end");
         // moved end condition check to onTurnEnd()
+        ProcessBattles();
         onRoundStart();
     }
 

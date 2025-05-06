@@ -45,6 +45,17 @@ import Project.Common.TimerPayload;
 public enum Client {
     INSTANCE;
 
+    // Note: Moved from Client as this file is the entry point now
+        // statically initialize the client-side LoggerUti
+        {
+            LoggerUtil.LoggerConfig config = new LoggerUtil.LoggerConfig();
+            config.setFileSizeLimit(2048 * 1024); // 2MB
+            config.setFileCount(1);
+            config.setLogLocation("client.log");
+            // Set the logger configuration
+            LoggerUtil.INSTANCE.setConfig(config);
+        }
+
     private Socket server = null;
     private ObjectOutputStream out = null;
     private ObjectInputStream in = null;
@@ -395,6 +406,7 @@ public enum Client {
     public void sendMessage(String message) throws IOException {
         // added in Milestone 3 to persist usage of slash commands
         if (processClientCommand(message)) {
+            
             return; // if the message was a command, don't send it to the server
         }
         Payload payload = new Payload();
