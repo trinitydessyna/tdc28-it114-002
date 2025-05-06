@@ -120,7 +120,7 @@ protected void onRoundStart() {
 
     // Reset player choices
     clientsInRoom.values().forEach(sp -> {
-        LoggerUtil.INSTANCE.info("Resetting choice for player: " + sp.getPlayerId());
+        LoggerUtil.INSTANCE.info("Resetting choice for player: " + sp.getDisplayName());
         sp.setChoice(null);
     });
 
@@ -208,7 +208,6 @@ protected void onRoundStart() {
     protected void onRoundEnd() {
         LoggerUtil.INSTANCE.info("onRoundEnd() start");
         resetRoundTimer(); // reset timer if round ended without the time expiring
-        ProcessBattles();
         LoggerUtil.INSTANCE.info("onRoundEnd() end");
         // moved end condition check to onTurnEnd()
         ProcessBattles();
@@ -346,7 +345,7 @@ protected void onRoundStart() {
     private ServerThread getCurrentPlayer() throws MissingCurrentPlayerException, PlayerNotFoundException {
         // quick early exit
         if (currentTurnClientId == Constants.DEFAULT_CLIENT_ID) {
-            throw new MissingCurrentPlayerException("Current Plaer not set");
+            throw new MissingCurrentPlayerException("Current Player not set");
         }
         return turnOrder.stream()
                 .filter(sp -> sp.getClientId() == currentTurnClientId)
@@ -409,7 +408,6 @@ protected void onRoundStart() {
             checkPlayerInRoom(currentUser);
             checkCurrentPhase(currentUser, Phase.IN_PROGRESS);
             checkCurrentPlayer(currentUser.getClientId());
-            checkIsReady(currentUser);
             if (currentUser.didTakeTurn()) {
                 currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "You have already taken your turn this round");
                 return;
@@ -476,11 +474,11 @@ private void ProcessBattles(){
                     player3.changePoints(1);
                     player1.setEliminated(true);
                     sendGameEvent(player3.getDisplayName() + " wins against " + player1.getDisplayName());
-                } else if (result3 == 3) {
+                } else if (result3 == 1) {
                     player3.changePoints(1);
                     player2.setEliminated(true);
                     sendGameEvent(player3.getDisplayName() + " wins against " + player2.getDisplayName());
-                } else if (result3 == 4) {
+                } else if (result3 == 2) {
                     player2.changePoints(1);
                     player3.setEliminated(true);
                     sendGameEvent(player2.getDisplayName() + " wins against " + player3.getDisplayName());
