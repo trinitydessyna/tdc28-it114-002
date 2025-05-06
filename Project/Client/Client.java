@@ -316,8 +316,7 @@ public enum Client {
                 wasCommand = true;
             }else if (text.startsWith(Command.PICK.command)) {
                 text = text.replace(Command.PICK.command, "").trim();
-
-                sendDoTurn(text);
+                sendPick(text);
                 wasCommand = true;
             }
         }
@@ -325,6 +324,16 @@ public enum Client {
     }
 
     // Start Send*() methods
+    public void sendPick(String text) throws IOException {
+        // NOTE for now using ReadyPayload as it has the necessary properties
+        // An actual turn may include other data for your project
+        ReadyPayload rp = new ReadyPayload();
+        rp.setPayloadType(PayloadType.PICK);
+        rp.setReady(true); // <- techically not needed as we'll use the payload type as a trigger
+        rp.setMessage(text);
+        sendToServer(rp);
+    }
+
     public void sendDoTurn(String text) throws IOException {
         // NOTE for now using ReadyPayload as it has the necessary properties
         // An actual turn may include other data for your project
