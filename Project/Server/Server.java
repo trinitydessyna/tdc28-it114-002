@@ -96,7 +96,7 @@ public enum Server {
      * 
      * @param serverThread
      */
-    private void onServerThreadInitialized(ServerThread serverThread) {
+    private synchronized void onServerThreadInitialized(ServerThread serverThread) {
         // Generate Server controlled clientId
         nextClientId = Math.max(++nextClientId, 1);
         serverThread.setClientId(nextClientId);
@@ -121,10 +121,13 @@ public enum Server {
      */
     protected void createRoom(String name) throws DuplicateRoomException {
         final String nameCheck = name.toLowerCase();
+        if (nameCheck.length() == 0) {
+            throw new IllegalArgumentException("Room name cannot be empty");
+        }
         if (rooms.containsKey(nameCheck)) {
             throw new DuplicateRoomException(String.format("Room %s already exists", name));
         }
-        Room room = new Room(name);
+        Room room = Room.LOBBY.equalsIgnoreCase(nameCheck) ? new Room(name) : new GameRoom(name);
         rooms.put(nameCheck, room);
         info(String.format("Created new Room %s", name));
     }
@@ -165,6 +168,7 @@ public enum Server {
     }
 
     /**
+     * 
      * <p>
      * Note: Not a common use-case; just updated for example sake.
      * </p>
