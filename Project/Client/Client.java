@@ -314,6 +314,11 @@ public enum Client {
 
                 sendDoTurn(text);
                 wasCommand = true;
+            }else if (text.startsWith(Command.PICK.command)) {
+                text = text.replace(Command.PICK.command, "").trim();
+
+                sendDoTurn(text);
+                wasCommand = true;
             }
         }
         return wasCommand;
