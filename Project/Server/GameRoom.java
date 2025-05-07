@@ -251,10 +251,11 @@ public class GameRoom extends BaseGameRoom {
                 .filter(sp -> sp.isReady() && sp.didTakeTurn())
                 .toList().size();
         if (numReady == numTookTurn) {
-            relay(null,
-                    String.format("All players have taken their turn (%d/%d) ending the round", numTookTurn, numReady));
-            onRoundEnd();
-        }
+                    relay(null, String.format("All players have picked (%d/%d). Processing results...", numTookTurn, numReady));
+                    ProcessBattles();
+                    onRoundEnd();
+                }
+                
     }
 
     // receive data from ServerThread (GameRoom specific)
