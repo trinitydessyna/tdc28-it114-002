@@ -32,6 +32,7 @@ public class GameRoom extends BaseGameRoom {
         syncCurrentPhase(sp);
         syncReadyStatus(sp);
         syncTurnStatus(sp);
+        syncPlayerPoints(sp);
     }
 
     /** {@inheritDoc} */
@@ -144,6 +145,7 @@ public class GameRoom extends BaseGameRoom {
         resetTurnStatus();
         changePhase(Phase.READY);
         LoggerUtil.INSTANCE.info("onSessionEnd() end");
+        endGame(); // Call endGame when the session ends
     }
     // end lifecycle methods
 
@@ -349,13 +351,14 @@ private void ProcessBattles(){
         }
         }
         // Update all players with their new points
-        battlers.forEach(player -> sendPlayerPoints(player));
         LoggerUtil.INSTANCE.info("ProcessBattles() end");
         String message = "Battle results have been processed.";
         sendGameEvent(message);
+        endGame(); // Call endGame after processing battles
+        }
         }
             
-    }
+    
     private void endGame(){
         changePhase(Phase.ENDED); // Assuming changePhase is the intended method
         sendGameEvent("Game Over");
@@ -376,6 +379,41 @@ private void ProcessBattles(){
         }
         sendGameEvent("Game has ended, Want to play again?");
     }
-}
 
-    // end receive data from ServerThread (GameRoom specific)
+    protected void handlePICK(ServerThread sp, String message) {
+        try {
+            checkPlayerInRoom(sp);
+            checkCurrentPhase(sp, Phase.IN_PROGRESS);
+            checkIsReady(sp);
+    
+            if (sp.didTakeTurn()) {
+                sp.sendMessage(Constants.DEFAULT_CLIENT_ID, "You have already picked.");
+                return;
+            }
+    
+            String choice = message.trim().toLowerCase();
+            if (!choice.equals("r") && !choice.equals("p") && !choice.equals("s")) {
+                sp.sendMessage(Constants.DEFAULT_CLIENT_ID, "Invalid choice. Pick R, P, or S.");
+                return;
+            }
+    
+            sp.setChoice(choice); // Assuming ServerThread has setChoice(String) method
+            sp.setTookTurn(true);
+    
+            relay(null, sp.getDisplayName() + " has made their pick.");
+            sendTurnStatus(sp, true);
+    
+            checkAllTookTurn();
+    
+        } catch (NotReadyException | PlayerNotFoundException | PhaseMismatchException e) {
+            sp.sendMessage(Constants.DEFAULT_CLIENT_ID, e.getMessage());
+            LoggerUtil.INSTANCE.severe("handlePICK exception", e);
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("Unexpected error in handlePICK", e);
+        }
+    }
+    
+
+
+        // end receive data from ServerThread (GameRoom specific)
+    }
