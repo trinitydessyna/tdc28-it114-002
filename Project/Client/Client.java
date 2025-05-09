@@ -554,6 +554,9 @@ public enum Client {
             case PayloadType.POINTS:
                 processPoints(payload);
                 break;
+                case PayloadType.PICK:
+                processPick(payload); // Process the PICK payload
+                break;
             default:
                 LoggerUtil.INSTANCE.warning(TextFX.colorize("Unhandled payload type", Color.YELLOW));
                 break;
@@ -903,6 +906,24 @@ public enum Client {
             LoggerUtil.INSTANCE.severe("Error processing reverse message", e);
         }
     }
+    private void processPick(Payload payload) {
+        if (!(payload instanceof ReadyPayload)) {
+            error("Invalid payload subclass for processPick");
+            return;
+        }
+        ReadyPayload rp = (ReadyPayload) payload;
+        LoggerUtil.INSTANCE.info(String.format("Choice received: %s", rp.getMessage()));
+        try {
+            events.forEach(event -> {
+                if (event instanceof IMessageEvents) {
+                    ((IMessageEvents) event).onMessageReceive(Constants.GAME_EVENT_CHANNEL, rp.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("Error processing pick", e);
+        }
+    }
+
     // End process*() methods
 
     /**

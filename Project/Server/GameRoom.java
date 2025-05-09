@@ -105,6 +105,7 @@ public class GameRoom extends BaseGameRoom {
         LoggerUtil.INSTANCE.info("onTurnStart() start");
         resetTurnTimer();
         startTurnTimer();
+        handlePICK(null, LOBBY);
         LoggerUtil.INSTANCE.info("onTurnStart() end");
     }
 
