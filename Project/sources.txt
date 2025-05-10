@@ -33,6 +33,8 @@
 ./Client/CardView.java
 ./Client/ClientUI.java
 ./Client/Views/GameEventsPanel.java
+./Client/Views/GridPanel.java
+./Client/Views/CellButton.java
 ./Client/Views/UserListItem.java
 ./Client/Views/Menu.java
 ./Client/Views/ChatPanel.java
@@ -47,11 +49,13 @@
 ./Client/Interfaces/IPointsEvent.java
 ./Client/Interfaces/IPhaseEvent.java
 ./Client/Interfaces/IConnectionEvents.java
+./Client/Interfaces/IBoardEvents.java
 ./Client/Interfaces/ITimeEvents.java
 ./Client/Interfaces/IClientEvents.java
 ./Client/Interfaces/IRoomEvents.java
 ./Client/Interfaces/ITurnEvent.java
 ./Client/Interfaces/IGameEvents.java
 ./Client/Interfaces/IReadyEvent.java
+./Client/Interfaces/IStatusEvents.java
 ./Client/Interfaces/ICardControls.java
 ./Client/Interfaces/IMessageEvents.java

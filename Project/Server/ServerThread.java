@@ -25,7 +25,11 @@ import Project.Common.TimerType;
  */
 public class ServerThread extends BaseServerThread {
     private Consumer<ServerThread> onInitializationComplete; // callback to inform when this object is ready
+    private boolean isAway;
+public boolean isAway() { return isAway; }
+public void setAway(boolean away) { this.isAway = away; }
 
+    
     /**
      * A wrapper method so we don't need to keep typing out the long/complex sysout
      * line inside
@@ -58,6 +62,12 @@ public class ServerThread extends BaseServerThread {
     }
 
     // Start Send*() Methods
+    public synchronized boolean sendAwayStatus(long clientId, boolean isAway) {
+       ReadyPayload rp = new ReadyPayload();
+        rp.setClientId(clientId);
+        rp.setAway(isAway);
+        return sendToClient(rp);
+    }
     /**
      * Syncs a specific client's points
      * 
@@ -289,9 +299,17 @@ public class ServerThread extends BaseServerThread {
                     // cast to GameRoom as the subclass will handle all Game logic
                     ((GameRoom) currentRoom).handlePICK(this, incoming.getMessage());
                 } catch (Exception e) {
-                    sendMessage(Constants.DEFAULT_CLIENT_ID, "Pick R, P, or S");
+                    sendMessage(Constants.DEFAULT_CLIENT_ID, "Pick R, P, S, G, or B");
                 }
                 break;
+                case AWAY:
+                // no data needed as the intent will be used as the trigger
+                try {
+                    // cast to GameRoom as the subclass will handle all Game logic
+                    ((GameRoom) currentRoom).handleAwayAction(this);
+                } catch (Exception e) {
+                    sendMessage(Constants.DEFAULT_CLIENT_ID, "You must be in a GameRoom to do an away action");
+                }
             default:
                 LoggerUtil.INSTANCE.warning(TextFX.colorize("Unknown payload type received", Color.RED));
                 break;
@@ -347,4 +365,7 @@ protected String getChoice(){
     public void setEliminated(boolean eliminated) {
         this.eliminated = eliminated;
     }
+    // Removed duplicate method setAway(boolean) to resolve the error.
+   
+
 }

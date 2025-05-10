@@ -1,6 +1,8 @@
 package Project.Server;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -13,17 +15,19 @@ import Project.Exceptions.PhaseMismatchException;
 import Project.Exceptions.PlayerNotFoundException;
 
 public class GameRoom extends BaseGameRoom {
-
-    // used for general rounds (usually phase-based turns)
     private TimedEvent roundTimer = null;
 
     // used for granular turn handling (usually turn-order turns)
     private TimedEvent turnTimer = null;
 
     private int round = 0;
+    // Explicit constructor to call the super constructor
     public GameRoom(String name) {
-        super(name);
+        super(name); // Call the appropriate constructor of BaseGameRoom
     }
+
+    // used for general rounds (usually phase-based turns)
+    
 
     /** {@inheritDoc} */
     @Override
@@ -105,7 +109,7 @@ public class GameRoom extends BaseGameRoom {
         LoggerUtil.INSTANCE.info("onTurnStart() start");
         resetTurnTimer();
         startTurnTimer();
-        handlePICK(null, LOBBY);
+        checkAllTookTurn();
         LoggerUtil.INSTANCE.info("onTurnStart() end");
     }
 
@@ -116,6 +120,15 @@ public class GameRoom extends BaseGameRoom {
     protected void onTurnEnd() {
         LoggerUtil.INSTANCE.info("onTurnEnd() start");
         resetTurnTimer(); // reset timer if turn ended without the time expiring
+        try {
+            ServerThread current = clientsInRoom.values().stream()
+                .filter(ServerThread::isReady)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No ready player found"));
+
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("Error during turn processing", e);
+        }
 
         LoggerUtil.INSTANCE.info("onTurnEnd() end");
     }
@@ -127,7 +140,7 @@ public class GameRoom extends BaseGameRoom {
     protected void onRoundEnd() {
         LoggerUtil.INSTANCE.info("onRoundEnd() start");
         resetRoundTimer(); // reset timer if round ended without the time expiring
-
+        ProcessBattles();
         LoggerUtil.INSTANCE.info("onRoundEnd() end");
         if (round >= 3) {
             onSessionEnd();
@@ -144,8 +157,10 @@ public class GameRoom extends BaseGameRoom {
         LoggerUtil.INSTANCE.info("onSessionEnd() start");
         resetReadyStatus();
         resetTurnStatus();
+        clientsInRoom.values().forEach(this::syncPlayerPoints);
         changePhase(Phase.READY);
         LoggerUtil.INSTANCE.info("onSessionEnd() end");
+        ProcessBattles();
         endGame(); // Call endGame when the session ends
     }
     // end lifecycle methods
@@ -174,7 +189,14 @@ public class GameRoom extends BaseGameRoom {
             return failedToSend;
         });
     }
-
+public void sendAwayStatus(long clientId, boolean isAway) {
+    clientsInRoom.values().forEach(spInRoom ->{
+        boolean failedToSend = !spInRoom.sendAwayStatus(clientId, isAway);
+        if (failedToSend) {
+            removeClient(spInRoom);
+        }
+    });
+}
     private void sendGameEvent(String str) {
         sendGameEvent(str, null);
     }
@@ -252,8 +274,8 @@ public class GameRoom extends BaseGameRoom {
                 .filter(sp -> sp.isReady() && sp.didTakeTurn())
                 .toList().size();
         if (numReady == numTookTurn) {
-                    relay(null, String.format("All players have picked (%d/%d). Processing results...", numTookTurn, numReady));
-                    ProcessBattles();
+                    relay(null,
+                     String.format("All players have picked (%d/%d). Processing results...", numTookTurn, numReady));
                     onRoundEnd();
                 }
                 
@@ -355,8 +377,7 @@ private void ProcessBattles(){
         // Update all players with their new points
         LoggerUtil.INSTANCE.info("ProcessBattles() end");
         String message = "Battle results have been processed.";
-        sendGameEvent(message);
-        endGame(); // Call endGame after processing battles
+        sendGameEvent(message); 
         }
         }
             
@@ -381,7 +402,20 @@ private void ProcessBattles(){
         }
         sendGameEvent("Game has ended, Want to play again?");
     }
-
+protected void handleAwayAction(ServerThread sender){
+    try{
+        checkPlayerInRoom(sender);
+        sender.setAway(!sender.isAway());
+        if (sender.isAway()){
+            sendGameEvent(String.format("%s is now away", sender.getDisplayName()));
+        } else {
+            sendGameEvent(String.format("%s is back", sender.getDisplayName()));
+        }
+        sendAwayStatus(sender.getClientId(), sender.isAway());
+    } catch (Exception e) {
+        LoggerUtil.INSTANCE.severe("handleAwayAction exception", e);
+    }
+}
     protected void handlePICK(ServerThread sp, String message) {
         try {
             checkPlayerInRoom(sp);
@@ -394,8 +428,8 @@ private void ProcessBattles(){
             }
     
             String choice = message.trim().toLowerCase();
-            if (!choice.equals("r") && !choice.equals("p") && !choice.equals("s")) {
-                sp.sendMessage(Constants.DEFAULT_CLIENT_ID, "Invalid choice. Pick R, P, or S.");
+            if (!choice.equals("r") && !choice.equals("p") && !choice.equals("s") && !choice.equals("g") && !choice.equals("b")) {
+                sp.sendMessage(Constants.DEFAULT_CLIENT_ID, "Invalid choice. Pick R, P, S, G, or B.");
                 return;
             }
     
@@ -415,7 +449,5 @@ private void ProcessBattles(){
         }
     }
     
-
-
         // end receive data from ServerThread (GameRoom specific)
     }
