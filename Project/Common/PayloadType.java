@@ -27,4 +27,5 @@ public enum PayloadType {
        TIME, // syncs current time of various timers
        POINTS,
        PICK,// syncs points data
+       AWAY, // syncs away status
 }

@@ -15,7 +15,7 @@ public class UserListItem extends JPanel {
     private JEditorPane textContainer;
     private JPanel turnIndicator = new JPanel();
     private JEditorPane pointsPanel = new JEditorPane("text/plain","");
-
+    private String clientName;
     /**
      * Constructor to create a UserListItem.
      *
@@ -24,7 +24,8 @@ public class UserListItem extends JPanel {
      * @param parent     The parent container to calculate available width.
      */
     public UserListItem(long clientId, String clientName, JPanel parent) {
-        textContainer = new JEditorPane("text/plain", clientName);
+        textContainer = new JEditorPane("text/html", clientName);
+        this.clientName = clientName;
         textContainer.setName(Long.toString(clientId));
         textContainer.setEditable(false);
         textContainer.setBorder(new EmptyBorder(0, 0, 0, 0)); // Add padding
@@ -87,5 +88,12 @@ public class UserListItem extends JPanel {
             
         }
         repaint();
+    }
+    public void setAway(boolean isAway){
+        if(isAway){
+            textContainer.setText(String.format("<font color=gray>%s</font>", clientName));
+        } else {
+            textContainer.setText(clientName);
+        }
     }
 }

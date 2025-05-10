@@ -1,5 +1,6 @@
 package Project.Common;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public enum Command {
@@ -17,7 +18,8 @@ public enum Command {
     READY("ready"),
     DO_SOMETHING("something"),
     USE("use"),
-    PICK ("pick");
+    PICK ("pick"),
+    AWAY("away");
     
 
     private static final HashMap<String, Command> BY_COMMAND = new HashMap<>();
@@ -34,5 +36,21 @@ public enum Command {
 
     public static Command stringToCommand(String command) {
         return BY_COMMAND.get(command);
+    } 
+    public void handleCommand(String text) throws IOException {
+        if (text.equalsIgnoreCase(Command.AWAY.command)) {
+            sendAway();
+        }
+    }
+
+    public void sendAway() throws IOException {
+        Payload payload = new Payload();
+        payload.setPayloadType(PayloadType.AWAY);
+            sendToServer(payload);
+        }
+    
+        private void sendToServer(Payload payload) throws IOException {
+            // Implement the logic to send the payload to the server
+            System.out.println("Sending payload to server: " + payload);
     }
 }

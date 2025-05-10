@@ -19,4 +19,9 @@ public class ReadyPayload extends Payload {
     public String toString() {
         return super.toString() + String.format(" isReady [%s]", isReady ? "ready" : "not ready");
     }
+
+    public void setAway(boolean isAway) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setAway'");
+    }
 }

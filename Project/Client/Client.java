@@ -21,6 +21,7 @@ import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IPointsEvent;
 import Project.Client.Interfaces.IReadyEvent;
 import Project.Client.Interfaces.IRoomEvents;
+import Project.Client.Interfaces.IStatusEvents;
 import Project.Client.Interfaces.ITimeEvents;
 import Project.Client.Interfaces.ITurnEvent;
 import Project.Common.Command;
@@ -557,13 +558,44 @@ public enum Client {
                 case PayloadType.PICK:
                 processPick(payload); // Process the PICK payload
                 break;
+            case PayloadType.AWAY:
+            processAway(payload); // Process the AWAY payload
+                break;
             default:
                 LoggerUtil.INSTANCE.warning(TextFX.colorize("Unhandled payload type", Color.YELLOW));
                 break;
 
         }
     }
+private void processAway(Payload payload) {
+        if (!(payload instanceof ReadyPayload)) {
+            error("Invalid payload subclass for processAway");
+            return;
+        }
+        ReadyPayload rp = (ReadyPayload) payload;
+        User u = knownClients.get(rp.getClientId());
+        u.setAway(rp.isReady());
+        events.stream().forEach(event -> {
+            if (event instanceof IStatusEvents) {
+                ((IStatusEvents) event).onReceiveAway(rp.getClientId(), u.isAway());
+            }
+        });
+        User cp = knownClients.get(rp.getClientId());
+        cp.setAway(rp.isReady());
+        LoggerUtil.INSTANCE.info(
+                String.format("%s is %s", cp.getDisplayName(),
+                        rp.isReady() ? "away" : "back"));
+        try {
+            events.forEach(event -> {
+                if (event instanceof IStatusEvents) {
+                    ((IStatusEvents) event).onReceiveAway(cp.getClientId(), cp.isReady());
+                }
+            });
 
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("Error processing away status", e);
+        }
+    }
     // Start process*() methods
     private void processPoints(Payload payload) {
         if (!(payload instanceof PointsPayload)) {
@@ -996,4 +1028,21 @@ public enum Client {
             e.printStackTrace();
         }
     }
+    // Removed duplicate INSTANCE declaration as it is already defined as an enum constant
+
+    // Other methods and fields
+
+
+
+    public void sendAway() throws IOException {
+
+        // Implementation for sending an "away" status
+
+        System.out.println("Sending away status to the server...");
+
+        // Add actual logic to communicate with the server here
+
+    }
+
+
 }

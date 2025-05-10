@@ -21,6 +21,7 @@ import javax.swing.border.EmptyBorder;
 import Project.Client.Client;
 import Project.Client.Interfaces.IPointsEvent;
 import Project.Client.Interfaces.IReadyEvent;
+import Project.Client.Interfaces.IStatusEvents;
 import Project.Client.Interfaces.ITurnEvent;
 import Project.Common.Constants;
 import Project.Common.LoggerUtil;
@@ -28,7 +29,28 @@ import Project.Common.LoggerUtil;
 /**
  * UserListPanel represents a UI component that displays a list of users.
  */
-public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, ITurnEvent {
+public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, ITurnEvent, IStatusEvents {
+
+    @Override
+    public void onAwayStatus(long clientId, boolean isAway) {
+        if (clientId == Constants.DEFAULT_CLIENT_ID) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    userItemsMap.values().forEach(u -> u.setAway(false)); // reset all
+                } catch (Exception e) {
+                    LoggerUtil.INSTANCE.severe("Error resetting user items", e);
+                }
+            });
+        } else if (userItemsMap.containsKey(clientId)) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    userItemsMap.get(clientId).setAway(isAway);
+                } catch (Exception e) {
+                    LoggerUtil.INSTANCE.severe("Error setting user item", e);
+                }
+            });
+        }
+    }
     private JPanel userListArea;
     private GridBagConstraints lastConstraints; // Keep track of the last constraints for the glue
     private HashMap<Long, UserListItem> userItemsMap; // Maintain a map of client IDs to UserListItems
@@ -231,4 +253,26 @@ public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, 
             });
         }
     }
+    @Override
+    public void onReceiveAway(long clientId, boolean isAway) {
+        if (clientId == Constants.DEFAULT_CLIENT_ID) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    userItemsMap.values().forEach(u -> u.setAway(false)); // reset all
+                } catch (Exception e) {
+                    LoggerUtil.INSTANCE.severe("Error resetting user items", e);
+                }
+            });
+        } else if (userItemsMap.containsKey(clientId)) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    userItemsMap.get(clientId).setAway(isAway);
+                } catch (Exception e) {
+                    LoggerUtil.INSTANCE.severe("Error setting user item", e);
+                }
+            });
+        }
+    }
+        
+    
 }

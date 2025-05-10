@@ -77,6 +77,18 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
         });
 
         this.add(splitPane, BorderLayout.CENTER);
+
+        JPanel interactions = new JPanel();
+        JButton awayButton = new JButton("Toggle Away");
+        awayButton.addActionListener(event -> {
+            try {
+                Client.INSTANCE.sendAway();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        interactions.add(awayButton);
+        this.add(interactions, BorderLayout.SOUTH);
         controls.addPanel(CardView.CHAT_GAME_SCREEN.name(), this);
         setVisible(false);
     }

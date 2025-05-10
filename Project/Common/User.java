@@ -7,7 +7,16 @@ public class User {
     private boolean tookTurn = false;
     private int points = 0;
     private String choice;
+    private boolean isAway = false;
 
+
+    public boolean isAway() {
+        return isAway;
+    }
+
+    public void setAway(boolean isAway) {
+        this.isAway = isAway;
+    }
 
     public String getChoice(){
         return choice;
