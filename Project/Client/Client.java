@@ -1028,4 +1028,21 @@ private void processAway(Payload payload) {
             e.printStackTrace();
         }
     }
+    // Removed duplicate INSTANCE declaration as it is already defined as an enum constant
+
+    // Other methods and fields
+
+
+
+    public void sendAway() throws IOException {
+
+        // Implementation for sending an "away" status
+
+        System.out.println("Sending away status to the server...");
+
+        // Add actual logic to communicate with the server here
+
+    }
+
+
 }
