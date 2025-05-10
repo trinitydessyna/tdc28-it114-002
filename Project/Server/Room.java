@@ -2,6 +2,7 @@ package Project.Server;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import Project.Common.Constants;
 import Project.Common.LoggerUtil;
 import Project.Common.RoomAction;
 import Project.Common.TextFX;
@@ -12,7 +13,7 @@ import Project.Exceptions.RoomNotFoundException;
 public class Room implements AutoCloseable {
     private final String name;// unique name of the Room
     private volatile boolean isRunning = false;
-    private final ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
+    protected final ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
 
     public final static String LOBBY = "lobby";
 
@@ -28,6 +29,10 @@ public class Room implements AutoCloseable {
 
     public String getName() {
         return this.name;
+    }
+
+    protected boolean isRunning() {
+        return isRunning;
     }
 
     protected synchronized void addClient(ServerThread client) {
@@ -67,8 +72,12 @@ public class Room implements AutoCloseable {
     private void syncExistingClients(ServerThread incomingClient) {
         clientsInRoom.values().forEach(serverThread -> {
             if (serverThread.getClientId() != incomingClient.getClientId()) {
-                boolean failedToSync = !incomingClient.sendClientInfo(serverThread.getClientId(),
-                        serverThread.getClientName(), RoomAction.JOIN, true);
+                boolean failedToSync = !incomingClient.sendClientInfo(
+                        serverThread.getClientId(),
+                        serverThread.getClientName(),
+                        getName(), // room name
+                        RoomAction.JOIN,
+                        true);
                 if (failedToSync) {
                     LoggerUtil.INSTANCE.warning(
                             String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
@@ -80,28 +89,25 @@ public class Room implements AutoCloseable {
 
     private void joinStatusRelay(ServerThread client, boolean didJoin) {
         clientsInRoom.values().removeIf(serverThread -> {
-            String formattedMessage = String.format("Room[%s] %s %s the room",
-                    getName(),
-                    client.getClientId() == serverThread.getClientId() ? "You"
-                            : client.getDisplayName(),
-                    didJoin ? "joined" : "left");
+
             // Share info of the client joining or leaving the room
-            boolean failedToSync = !serverThread.sendClientInfo(client.getClientId(),
-                    client.getClientName(), didJoin ? RoomAction.JOIN : RoomAction.LEAVE);
-            // Send the server generated message to the current client
-            boolean failedToSend = !serverThread.sendMessage(formattedMessage);
-            if (failedToSend || failedToSync) {
+            boolean failedToSync = !serverThread.sendClientInfo(
+                    client.getClientId(), // client id
+                    client.getClientName(), // client name
+                    getName(), // room name
+                    didJoin ? RoomAction.JOIN : RoomAction.LEAVE // action
+            );
+            if (failedToSync) {
                 LoggerUtil.INSTANCE.warning(
                         String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
                 disconnect(serverThread);
             }
-            return failedToSend;
+            return failedToSync;
         });
     }
 
     /**
      * Sends a basic String message from the sender to all connectedClients
-     * Internally calls processCommand and evaluates as necessary.
      * Note: Clients that fail to receive a message get removed from
      * connectedClients.
      * Adding the synchronized keyword ensures that only one thread can execute
@@ -117,12 +123,12 @@ public class Room implements AutoCloseable {
             return;
         }
 
-        // Note: any desired changes to the message must be done before this line
-        String senderString = sender == null ? String.format("Room[%s]", getName())
-                : sender.getDisplayName();
+        final long senderId = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
         // Note: formattedMessage must be final (or effectively final) since outside
         // scope can't be changed inside a callback function (see removeIf() below)
-        final String formattedMessage = String.format("%s: %s", senderString, message);
+        // Note: Changed in Milestone 3 since client will use its own knownClients list
+        // to lookup the name
+        final String formattedMessage = message;
 
         // loop over clients and send out the message; remove client if message failed
         // to be sent
@@ -131,7 +137,7 @@ public class Room implements AutoCloseable {
         info(String.format("sending message to %s recipients: %s", clientsInRoom.size(), formattedMessage));
 
         clientsInRoom.values().removeIf(serverThread -> {
-            boolean failedToSend = !serverThread.sendMessage(formattedMessage);
+            boolean failedToSend = !serverThread.sendMessage(senderId, formattedMessage);
             if (failedToSend) {
                 LoggerUtil.INSTANCE.warning(
                         String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
@@ -149,7 +155,7 @@ public class Room implements AutoCloseable {
      * 
      * @param client
      */
-    private synchronized void disconnect(ServerThread client) {
+    protected synchronized void disconnect(ServerThread client) {
         if (!isRunning) { // block action if Room isn't running
             return;
         }
@@ -160,8 +166,8 @@ public class Room implements AutoCloseable {
                 if (serverThread.getClientId() == disconnectingServerThread.getClientId()) {
                     return true;
                 }
-                boolean failedToSend = !serverThread.sendClientInfo(disconnectingServerThread.getClientId(),
-                        disconnectingServerThread.getClientName(), RoomAction.LEAVE);
+                boolean failedToSend = !serverThread.sendDisconnect(
+                        disconnectingServerThread.getClientId());
                 if (failedToSend) {
                     LoggerUtil.INSTANCE.warning(
                             String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
@@ -169,7 +175,9 @@ public class Room implements AutoCloseable {
                 }
                 return failedToSend;
             });
-            relay(null, disconnectingServerThread.getDisplayName() + " disconnected");
+            // relay(null, disconnectingServerThread.getDisplayName() + " disconnected");
+            disconnectingServerThread.sendDisconnect(
+                    disconnectingServerThread.getClientId());
             disconnectingServerThread.disconnect();
         }
         autoCleanup();
@@ -227,11 +235,13 @@ public class Room implements AutoCloseable {
         try {
             Server.INSTANCE.createRoom(roomName);
             Server.INSTANCE.joinRoom(roomName, sender);
+        } catch (IllegalArgumentException e) {
+            sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "Room name cannot be empty");
         } catch (RoomNotFoundException e) {
             info("Room wasn't found (this shouldn't happen)");
             e.printStackTrace();
         } catch (DuplicateRoomException e) {
-            sender.sendMessage(String.format("Room %s already exists", roomName));
+            sender.sendMessage(Constants.DEFAULT_CLIENT_ID, String.format("Room %s already exists", roomName));
         }
     }
 
@@ -239,7 +249,7 @@ public class Room implements AutoCloseable {
         try {
             Server.INSTANCE.joinRoom(roomName, sender);
         } catch (RoomNotFoundException e) {
-            sender.sendMessage(String.format("Room %s doesn't exist", roomName));
+            sender.sendMessage(Constants.DEFAULT_CLIENT_ID, String.format("Room %s doesn't exist", roomName));
         }
     }
 
